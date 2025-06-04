@@ -114,80 +114,142 @@ void test_get_minor() {
 }
 
 
-
-
-int main() {
-    // Test 1: Default constructor
+void testDefaultConstructor() {
+    std::cout << "Test 1: Default constructor\n";
     Vector v1;
-   
-    // Test 2: Parameterized constructor
+    std::cout << "Passed (no crash)\n";
+}
+
+void testParameterizedConstructor() {
+    std::cout << "\nTest 2: Parameterized constructor\n";
     Vector v2(5, 10); // size=5, all elements=10
-    std::cout << "\nVector v2 (size=5, filled with 10): ";
+    std::cout << "Vector v2: ";
     for (int i = 1; i <= 5; ++i) {
-        std::cout << v2(i) << " "; // Using operator() (1-based indexing)
+        std::cout << v2(i) << " ";
     }
+    std::cout << "\n";
+}
 
-    // Test 3: Copy constructor
+void testCopyConstructor() {
+    std::cout << "\nTest 3: Copy constructor\n";
+    Vector v2(5, 10);
     Vector v3 = v2;
-    std::cout << "\n\nCopied Vector v3 (from v2): ";
-    for (int i = 1; i <= 5; ++i) {
-        std::cout << v3[i-1] << " "; // Using operator[] (0-based indexing)
+    std::cout << "Copied Vector v3: ";
+    for (int i = 0; i < 5; ++i) {
+        std::cout << v3[i] << " ";
     }
+    std::cout << "\n";
+}
 
-    // Test 4: Assignment operator
+void testAssignmentOperator() {
+    std::cout << "\nTest 4: Assignment operator\n";
+    Vector v3(5, 10);
     Vector v4;
     v4 = v3;
-    std::cout << "\n\nAssigned Vector v4 (from v3): ";
+    std::cout << "Assigned Vector v4: ";
     for (int i = 1; i <= 5; ++i) {
         std::cout << v4(i) << " ";
     }
+    std::cout << "\n";
+}
 
-    // Test 5: Vector addition
+void testAddition() {
+    std::cout << "\nTest 5: Vector addition\n";
+    Vector v2(5, 10);
     Vector v5(5, 3);
-    Vector v6 = v2 + v5; // v2=[10,10,10,10,10], v5=[3,3,3,3,3]
-    std::cout << "\n\nVector Addition (v2 + v5): ";
+    Vector v6 = v2 + v5;
+    std::cout << "v2 + v5 = ";
     for (int i = 1; i <= 5; ++i) {
-        std::cout << v6(i) << " "; // Should print 13 13 13 13 13
+        std::cout << v6(i) << " ";
     }
+    std::cout << "\n";
+}
 
-    // Test 6: Vector subtraction
+void testSubtraction() {
+    std::cout << "\nTest 6: Vector subtraction\n";
+    Vector v6(5, 13);
+    Vector v5(5, 3);
     Vector v7 = v6 - v5;
-    std::cout << "\n\nVector Subtraction (v6 - v5): ";
+    std::cout << "v6 - v5 = ";
     for (int i = 1; i <= 5; ++i) {
-        std::cout << v7(i) << " "; // Should print 10 10 10 10 10
+        std::cout << v7(i) << " ";
     }
+    std::cout << "\n";
+}
 
-    // Test 7: Scalar multiplication
-    Vector v8 = v7 * 2; // [10,10,10,10,10] * 2
-    std::cout << "\n\nScalar Multiplication (v7 * 2): ";
-    for (int i = 1; i <= 5; ++i) {
-        std::cout << v8(i) << " "; // Should print 20 20 20 20 20
-    }
-
-    // Test 8: Dot product
-    int dot = v8 * v5; // [20,20,20,20,20] · [3,3,3,3,3]
-    std::cout << "\n\nDot Product (v8 · v5): " << dot << std::endl; // Should print 300
-
-    // Test 9: Increment/Decrement operators
-    std::cout << "\nPrefix Increment (++v8): ";
-    ++v8; // [21,21,21,21,21]
+void testScalarMultiplication() {
+    std::cout << "\nTest 7: Scalar multiplication\n";
+    Vector v7(5, 10);
+    Vector v8 = v7 * 2;
+    std::cout << "v7 * 2 = ";
     for (int i = 1; i <= 5; ++i) {
         std::cout << v8(i) << " ";
     }
+    std::cout << "\n";
+}
 
-    std::cout << "\nPostfix Decrement (v8--): ";
-    Vector v9 = v8--; // v9=[21,...], v8=[20,...]
+void testDotProduct() {
+    std::cout << "\nTest 8: Dot product\n";
+    Vector v8(5, 20);
+    Vector v5(5, 3);
+    int dot = v8 * v5;
+    std::cout << "v8 · v5 = " << dot << "\n";
+}
+
+void testIncrementDecrement() {
+    std::cout << "\nTest 9: Increment / Decrement operators\n";
+    Vector v8(5, 20);
+    ++v8; // Prefix increment
+    std::cout << "After ++v8: ";
+    for (int i = 1; i <= 5; ++i) {
+        std::cout << v8(i) << " ";
+    }
+    std::cout << "\n";
+}
+
+void testPostfixDecrement() {
+    std::cout << "\nTest 10: Postfix Decrement\n";
+    Vector v8(5, 21);       // [21, 21, 21, 21, 21]
+    Vector v9 = v8--;       // v9 = [21, ...], v8 becomes [20, ...]
+    std::cout << "v9 (copy before decrement): ";
     for (int i = 1; i <= 5; ++i) {
         std::cout << v9(i) << " ";
     }
-
-    // Test 10: Bounds checking
-    std::cout << "\n\nBounds Checking (v8(0)): ";
-    try {
-        std::cout << v8(0); // Should throw an error (1-based indexing)
-    } catch (...) {
-        std::cout << "Caught out-of-bounds access!"; 
+    std::cout << "\n";
+    std::cout << "v8 (after postfix decrement): ";
+    for (int i = 1; i <= 5; ++i) {
+        std::cout << v8(i) << " ";
     }
+    std::cout << "\n";
+}
+
+void testBoundsChecking() {
+    std::cout << "\nTest 11: Bounds Checking\n";
+    Vector v8(5, 20);
+    std::cout << "Trying v8(0): ";
+    try {
+        std::cout << v8(0); // Should throw exception (1-based index)
+    } catch (const std::out_of_range& e) {
+        std::cout << "Caught out-of-bounds access: " << e.what() << "\n";
+    } catch (...) {
+        std::cout << "Caught out-of-bounds access (unknown type)!\n";
+    }
+}
+
+int main() {
+
+    testDefaultConstructor();
+    testParameterizedConstructor();
+    testCopyConstructor();
+    testAssignmentOperator();
+    testAddition();
+    testSubtraction();
+    testScalarMultiplication();
+    testDotProduct();
+    testIncrementDecrement();
+    testPostfixDecrement();
+    testBoundsChecking();
+
     test_default_constructor();
     test_parameterized_constructor();
     test_copy_constructor();
