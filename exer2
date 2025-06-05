@@ -1,0 +1,247 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cmath>
+
+class LinearRegression {
+private:
+    std::vector<std::vector<double>> X; // Features matrix
+    std::vector<double> y;              // Target values
+    std::vector<double> coefficients;   // Model parameters (x1, x2, ..., x6)
+
+    // Training and testing data
+    std::vector<std::vector<double>> X_train;
+    std::vector<double> y_train;
+
+    // Matrix operations for solving normal equations
+    std::vector<std::vector<double>> matrixMultiply(const std::vector<std::vector<double>>& A,
+                                                   const std::vector<std::vector<double>>& B) {
+        int rows_A = A.size();
+        int cols_A = A[0].size();
+        int cols_B = B[0].size();
+
+        std::vector<std::vector<double>> result(rows_A, std::vector<double>(cols_B, 0.0));
+
+        for (int i = 0; i < rows_A; i++) {
+            for (int j = 0; j < cols_B; j++) {
+                for (int k = 0; k < cols_A; k++) {
+                    result[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    // Transpose matrix
+    std::vector<std::vector<double>> transpose(const std::vector<std::vector<double>>& A) {
+        int rows = A.size();
+        int cols = A[0].size();
+        std::vector<std::vector<double>> result(cols, std::vector<double>(rows));
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                result[j][i] = A[i][j];
+            }
+        }
+        return result;
+    }
+
+    // Solve system using Gaussian elimination (simplified version)
+    std::vector<double> solveSystem(std::vector<std::vector<double>> A, std::vector<double> b) {
+        int n = A.size();
+
+        // Forward elimination
+        for (int i = 0; i < n; i++) {
+            // Find pivot
+            int maxRow = i;
+            for (int k = i + 1; k < n; k++) {
+                if (abs(A[k][i]) > abs(A[maxRow][i])) {
+                    maxRow = k;
+                }
+            }
+
+            // Swap rows
+            std::swap(A[i], A[maxRow]);
+            std::swap(b[i], b[maxRow]);
+
+            // Make all rows below this one 0 in current column
+            for (int k = i + 1; k < n; k++) {
+                double factor = A[k][i] / A[i][i];
+                for (int j = i; j < n; j++) {
+                    A[k][j] -= factor * A[i][j];
+                }
+                b[k] -= factor * b[i];
+            }
+        }
+
+        // Back substitution
+        std::vector<double> x(n);
+        for (int i = n - 1; i >= 0; i--) {
+            x[i] = b[i];
+            for (int j = i + 1; j < n; j++) {
+                x[i] -= A[i][j] * x[j];
+            }
+            x[i] /= A[i][i];
+        }
+
+        return x;
+    }
+
+public:
+    // Make test data accessible for main function
+    std::vector<std::vector<double>> X_test;
+    std::vector<double> y_test;
+
+    // Load data from file
+    void loadData(const std::string& filename) {
+        std::ifstream file(filename);
+        std::string line;
+
+        X.clear();
+        y.clear();
+
+        while (std::getline(file, line)) {
+            std::stringstream ss(line);
+            std::string item;
+            std::vector<std::string> row;
+
+            // Split line by commas
+            while (std::getline(ss, item, ',')) {
+                row.push_back(item);
+            }
+
+            if (row.size() >= 10) {
+                // Extract features: MYCT, MMIN, MMAX, CACH, CHMIN, CHMAX
+                // These are typically at positions 2, 3, 4, 5, 6, 7
+                std::vector<double> features;
+                for (int i = 2; i <= 7; i++) {
+                    features.push_back(std::stod(row[i]));
+                }
+                X.push_back(features);
+
+                // Extract target: PRP (usually at position 😎
+                y.push_back(std::stod(row[8]));
+            }
+        }
+
+        std::cout << "Loaded " << X.size() << " samples with " << X[0].size() << " features" << std::endl;
+    }
+
+    // Split data into training and testing sets
+    void splitData(double trainRatio = 0.8){
+        int trainSize = static_cast<int>(X.size() * trainRatio);
+
+        // Clear previous splits
+        X_train.clear(); X_test.clear();
+        y_train.clear(); y_test.clear();
+
+        // Simple split: first 80% for training, last 20% for testing
+        for (int i = 0; i < trainSize; i++) {
+            X_train.push_back(X[i]);
+            y_train.push_back(y[i]);
+        }
+
+        for (int i = trainSize; i < X.size(); i++) {
+            X_test.push_back(X[i]);
+            y_test.push_back(y[i]);
+        }
+
+        std::cout << "Training samples: " << X_train.size() << std::endl;
+        std::cout << "Testing samples: " << X_test.size() << std::endl;
+    }
+
+    // Train the model (find the coefficients)
+    void train() {
+        std::cout << "Training the model..." << std::endl;
+
+        // Create X^T (transpose of X_train)
+        auto X_T = transpose(X_train);
+
+        // Calculate X^T * X
+        auto XTX = matrixMultiply(X_T, X_train);
+
+        // Calculate X^T * y
+        std::vector<double> XTy(X_T.size(), 0.0);
+        for (int i = 0; i < X_T.size(); i++) {
+            for (int j = 0; j < y_train.size(); j++) {
+                XTy[i] += X_T[i][j] * y_train[j];
+            }
+        }
+
+        // Solve the normal equation: (X^T * X) * coefficients = X^T * y
+        coefficients = solveSystem(XTX, XTy);
+
+        std::cout << "Training completed!" << std::endl;
+        std::cout << "Found " << coefficients.size() << " coefficients" << std::endl;
+    }
+
+    // Make predictions
+    std::vector<double> predict(const std::vector<std::vector<double>>& testX) {
+        std::vector<double> predictions;
+
+        for (const auto& sample : testX) {
+            double prediction = 0.0;
+            for (size_t i = 0; i < coefficients.size(); i++) {
+                prediction += coefficients[i] * sample[i];
+            }
+            predictions.push_back(prediction);
+        }
+
+        return predictions;
+    }
+
+    // Calculate Root Mean Square Error
+    double calculateRMSE(const std::vector<double>& predicted, const std::vector<double>& actual) {
+        double sum = 0.0;
+        for (size_t i = 0; i < predicted.size(); i++) {
+            double diff = predicted[i] - actual[i];
+            sum += diff * diff;
+        }
+        return sqrt(sum / predicted.size());
+    }
+
+    // Print the model equation
+    void printModel() {
+        std::cout << "PRP = ";
+        std::vector<std::string> features = {"MYCT", "MMIN", "MMAX", "CACH", "CHMIN", "CHMAX"};
+        for (size_t i = 0; i < coefficients.size(); i++) {
+            if (i > 0) std::cout << " + ";
+            std::cout << coefficients[i] << "*" << features[i];
+        }
+        std::cout << std::endl;
+    }
+};
+
+int main() {
+    LinearRegression model;
+
+    // Step 1: Load the data
+    model.loadData("machine.data");
+
+    // Step 2: Split into training and testing
+    model.splitData(0.8);
+
+    // Step 3: Train the model
+    model.train();
+
+    // Step 4: Make predictions and evaluate
+    auto predictions = model.predict(model.X_test);
+    double rmse = model.calculateRMSE(predictions, model.y_test);
+
+    // Step 5: Show results
+    std::cout << "\n=== RESULTS ===" << std::endl;
+    model.printModel();
+    std::cout << "RMSE on test set: " << rmse << std::endl;
+
+    // Show some example predictions vs actual
+    std::cout << "\nFirst 10 predictions vs actual:" << std::endl;
+    for (int i = 0; i < std::min(10, (int)predictions.size()); i++) {
+        std::cout << "Predicted: " << predictions[i]
+                  << ", Actual: " << model.y_test[i]
+                  << ", Difference: " << abs(predictions[i] - model.y_test[i]) << std::endl;
+    }
+
+    return 0;
+}
